@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Home Page</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>Welcome to Our Social Media Website</h1>
+
+      <div id="loginMessage" style="display: none">
+        <p>
+          You are not logged in. Please <a href="login.html">login</a> to view
+          and post comments.
+        </p>
+      </div>
+
+      <div id="commentsSection" style="display: none">
+        <h2>Comments</h2>
+
+        <!-- Form to create comments -->
+        <form id="commentForm">
+          <div class="form-group">
+            <label for="commentContent">Write a comment:</label>
+            <textarea
+              class="form-control"
+              id="commentContent"
+              name="commentContent"
+              rows="3"
+              required
+            ></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Post Comment</button>
+        </form>
+
+        <h3>Previous Comments:</h3>
+        <div id="commentsList"></div>
+
+        <button id="logoutButton" class="btn btn-danger">Logout</button>
+      </div>
+    </div>
+
+    <script src="frontend.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", async function () {
+        const userId = localStorage.getItem("userId");
+        if (!userId) {
+          document.getElementById("loginMessage").style.display = "block";
+        } else {
+          document.getElementById("commentsSection").style.display = "block";
+
+          try {
+            const response = await fetch("http://localhost:3000/comments");
+            const comments = await response.json();
+            displayComments(comments);
+          } catch (error) {
+            console.error("Error fetching comments:", error);
+            alert("Failed to fetch comments. Please try again later.");
+          }
+        }
+      });
+
+      async function displayComments(comments) {
+        const commentsList = document.getElementById("commentsList");
+        commentsList.innerHTML = "";
+        comments.forEach((comment) => {
+          const commentItem = document.createElement("div");
+          commentItem.classList.add("comment-item");
+          commentItem.innerHTML = `<strong>${comment.user.username}:</strong> ${comment.content}`;
+          commentsList.appendChild(commentItem);
+        });
+      }
+
+      document
+        .getElementById("commentForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          const commentContent =
+            document.getElementById("commentContent").value;
+          const userId = localStorage.getItem("userId"); // Retrieve user ID from local storage
+
+          try {
+            const response = await fetch("http://localhost:3000/comment", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ content: commentContent, userId: userId }), // Include user ID in request body
+            });
+
+            if (response.ok) {
+              const commentsResponse = await fetch(
+                "http://localhost:3000/comments"
+              );
+              const comments = await commentsResponse.json();
+              displayComments(comments);
+              document.getElementById("commentContent").value = "";
+            } else {
+              console.error("Failed to post comment:", response.statusText);
+              alert("Failed to post comment. Please try again.");
+            }
+          } catch (error) {
+            console.error("Error posting comment:", error);
+            alert("Failed to post comment. Please try again.");
+          }
+        });
+
+      document
+        .getElementById("logoutButton")
+        .addEventListener("click", function () {
+          localStorage.removeItem("userId");
+          window.location.href = "login.html";
+        });
+    </script>
+  </body>
+</html>

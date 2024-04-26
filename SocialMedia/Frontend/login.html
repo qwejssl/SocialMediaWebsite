@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>User Login</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>User Login</h1>
+      <form id="loginForm">
+        <div class="form-group">
+          <label for="loginUsername">Username:</label>
+          <input
+            type="text"
+            class="form-control"
+            id="loginUsername"
+            name="loginUsername"
+            required
+          />
+        </div>
+        <div class="form-group">
+          <label for="loginPassword">Password:</label>
+          <input
+            type="password"
+            class="form-control"
+            id="loginPassword"
+            name="loginPassword"
+            required
+          />
+        </div>
+        <button type="submit" class="btn btn-primary">Login</button>
+
+        <div class="text-center">
+          <p>Don't have an account? <a href="registration.html">Register</a></p>
+        </div>
+      </form>
+    </div>
+
+    <script>
+      document
+        .getElementById('loginForm')
+        .addEventListener('submit', async function (event) {
+          event.preventDefault();
+          const loginUsername = document.getElementById('loginUsername').value;
+          const loginPassword = document.getElementById('loginPassword').value;
+
+          try {
+            const response = await fetch('http://localhost:3000/login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                username: loginUsername,
+                password: loginPassword,
+              }),
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+
+              if (loginUsername === 'admin' && loginPassword === 'admin123') {
+                localStorage.setItem('isAdmin', true);
+                window.location.href = 'admin.html';
+              } else {
+                localStorage.setItem('userId', data.userId);
+                window.location.href = 'index.html';
+              }
+            } else {
+              console.error('Login failed:', response.statusText);
+              alert(
+                'Login failed. Please check your credentials and try again.'
+              );
+            }
+          } catch (error) {
+            console.error('Error logging in:', error);
+            alert('Login failed. Please try again.');
+          }
+        });
+    </script>
+  </body>
+</html>
